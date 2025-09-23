@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-net=8.8.8.8
+#!/usr/bin/env -S deno run --allow-net=8.8.8.8,dns.google
 
 import { fetchUsing, TlsDialer } from "@cloudydeno/socket-fetch";
 

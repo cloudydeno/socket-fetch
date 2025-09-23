@@ -46,10 +46,11 @@ export class TlsDialer implements Dialer {
       console.log(await tlsConn.handshake())
       return tlsConn;
 
-    // Else, we can use connectTls and get mTLS support.
+    // Else, we can use connectTls to offload the socket<->TLS bit to Deno.
     } else {
       return await Deno.connectTls({
         ...resolveHostPort(target, "443"),
+        alpnProtocols: ['http/1.1'],
         ...this.opts,
       });
     }

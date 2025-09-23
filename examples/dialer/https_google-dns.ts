@@ -2,7 +2,7 @@
 
 import { fetchUsing, TlsDialer } from "@cloudydeno/socket-fetch";
 
-const dialer = new TlsDialer();
+const dialer = new TlsDialer({ hostname: 'dns.google' });
 const resp = await fetchUsing(dialer, "https://8.8.8.8/healthz");
 // (in an actual application, consider using Client to allow connection reuse)
 

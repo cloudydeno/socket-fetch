@@ -1,0 +1,19 @@
+{
+  "name": "@cloudydeno/socket-fetch",
+  "version": "0.2.0",
+  "workspace": [
+    "examples"
+  ],
+  "exports": {
+    "./client.ts": "./client.ts",
+    "./dialers.ts": "./dialers.ts",
+    "./perform-request.ts": "./perform-request.ts",
+    "./types.ts": "./types.ts",
+    ".": "./mod.ts"
+  },
+  "publish": {
+    "exclude": [
+      ".github"
+    ]
+  }
+}

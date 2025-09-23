@@ -1,6 +1,6 @@
-#!/usr/bin/env -S deno run --unstable --allow-read=/var/run/docker.sock --allow-write=/var/run/docker.sock
+#!/usr/bin/env -S deno run --allow-read=/var/run/docker.sock --allow-write=/var/run/docker.sock
 
-import { fetch } from '../../mod.ts';
+import { fetch } from "@cloudydeno/socket-fetch";
 
 // Using a non-standard URL, similar to https://github.com/whatwg/url/issues/577
 // A scrubbed header of `Host: uds.localhost` is sent instead of the socket path

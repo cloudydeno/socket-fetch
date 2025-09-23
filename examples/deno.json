@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "@cloudydeno/kubernetes-client": "jsr:@cloudydeno/kubernetes-client@^0.7.7"
+  }
+}

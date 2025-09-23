@@ -1,7 +1,6 @@
-import { iterateReader } from "https://deno.land/std@0.175.0/streams/iterate_reader.ts";
-import { writeAll } from "https://deno.land/std@0.175.0/streams/write_all.ts";
+import type { DialedSocket } from "./types.ts";
 
-export async function performRequest(conn: Deno.Conn, url: URL, request: Request) {
+export async function performRequest(conn: DialedSocket, url: URL, request: Request): Promise<Response> {
 
   if (request.body) throw new Error(`TODO: Request#body`);
   if (request.cache) throw new Error(`TODO: Request#cache`);
@@ -32,40 +31,49 @@ export async function performRequest(conn: Deno.Conn, url: URL, request: Request
   }
   reqHeaders.set("connection", "close"); // TODO: connection reuse
 
-  await writeAll(conn, new TextEncoder().encode(`${request.method} ${url.pathname} HTTP/1.1\r\n`));
+  const writer = conn.writable.getWriter();
+  await writer.write(new TextEncoder().encode(`${request.method} ${url.pathname} HTTP/1.1\r\n`));
   for (const header of reqHeaders) {
     // TODO: surely values need to be sanitized
-    await writeAll(conn, new TextEncoder().encode(`${header[0]}: ${header[1]}\r\n`));
+    await writer.write(new TextEncoder().encode(`${header[0]}: ${header[1]}\r\n`));
   }
-  await writeAll(conn, new TextEncoder().encode(`\r\n`));
+  await writer.write(new TextEncoder().encode(`\r\n`));
+  writer.releaseLock();
 
   const headerLines = new Array<string>();
   let leftovers = new Array<Uint8Array>();
   let mode: "headers" | "body" | "chunks" = "headers";
-  for await (const b of iterateReader(conn)) {
-    // console.log('---', b.length);
-    let remaining = b.subarray(0);
-    while (mode === "headers" && remaining.includes(10)) {
-      const idx = remaining.indexOf(10);
-      const decoder = new TextDecoder();
-      let text = "";
-      for (const leftover of leftovers) {
-        text += decoder.decode(leftover, { stream: true });
+  try {
+    for await (const b of conn.readable) {
+      // console.log('---', b.length, new TextDecoder().decode(b));
+      let remaining = b.subarray(0);
+      while (mode === "headers" && remaining.includes(10)) {
+        const idx = remaining.indexOf(10);
+        const decoder = new TextDecoder();
+        let text = "";
+        for (const leftover of leftovers) {
+          text += decoder.decode(leftover, { stream: true });
+        }
+        leftovers.length = 0;
+        const line = remaining.subarray(0, idx);
+        text += decoder.decode(line).replace(/\r$/, "");
+        if (text == "") mode = "body";
+        else headerLines.push(text);
+        remaining = remaining.subarray(idx + 1);
       }
-      leftovers.length = 0;
-      const line = remaining.subarray(0, idx);
-      text += decoder.decode(line).replace(/\r$/, "");
-      if (text == "") mode = "body";
-      else headerLines.push(text);
-      remaining = remaining.subarray(idx + 1);
+      if (remaining.length > 0) {
+        leftovers.push(remaining.slice(0));
+      }
     }
-    if (remaining.length > 0) {
-      leftovers.push(remaining.slice(0));
-    }
+  } catch (thrown) {
+    if (thrown instanceof Deno.errors.UnexpectedEof) {
+      // Google sometimes doesn't send EOF. We'll just tolerate it
+      // This can be changed up once we process the received stream less greedily.
+    } else throw thrown;
   }
   if (headerLines.length == 0) throw new Error(`No HTTP response received`);
 
-  // should really be a ReadableStream
+  // TODO: the response body should really be a ReadableStream
   const bodySize = leftovers.reduce((a, b) => b.byteLength + a, 0);
   let body = new Uint8Array(bodySize);
   let pos = 0;

@@ -1,4 +1,4 @@
-![Deno CI](https://github.com/cloudydeno/deno-socket_fetch/workflows/CI/badge.svg?branch=main)
+[![CI](https://github.com/cloudydeno/socket-fetch/actions/workflows/deno-ci.yaml/badge.svg)](https://github.com/cloudydeno/socket-fetch/actions/workflows/deno-ci.yaml)
 
 # `/x/socket_fetch`
 
@@ -21,7 +21,9 @@ once Deno's HTTP builtins provide comparable networking functionality.
 Deno's `fetch()` APIs are relatively limited for a server-side runtime.
 Numerous advanced network features have been lacking:
 
-* HTTP over UNIX domain sockets: https://github.com/denoland/deno/issues/8821
+* ~~HTTP over UNIX domain sockets: https://github.com/denoland/deno/issues/8821~~
+  * Added in Deno v2.3.2 :)
+  * https://github.com/denoland/deno/pull/29154
 * ~~HTTPS/TLS to IP addresses: https://github.com/denoland/deno/issues/7660~~
   * Added in Deno v1.34 :)
 * ~~HTTPS with TLS client auth: https://github.com/denoland/deno/pull/11721~~
@@ -31,7 +33,7 @@ Numerous advanced network features have been lacking:
 Unfortunately, HTTP over UNIX domain sockets and HTTPS to IP addresses are both
 really useful in modern/containerized cloud architecture.
 For example, the Docker Engine listens **only** at `/var/run/docker.sock` by default,
-and Google Kubernetes Engine HTTPS APIs are **only** externally reachable via IP address.
+and ~~Google Kubernetes Engine control planes are **only** externally reachable via IP address~~.
 
 In order to support connecting to these endpoints from various modules,
 I've opted to leverage Deno's TCP primitives directly in a new module.
@@ -40,7 +42,7 @@ I've opted to leverage Deno's TCP primitives directly in a new module.
 
 Consider this library if you:
 
-* Need to send basic HTTP requests to a daemon that listens on a Unix socket
+* ~~Need to send basic HTTP requests to a daemon that listens on a Unix socket~~
   * Docker Engine, `tailscaled`, Podman, `snapd`, etc
 * Need to communicate with an HTTPS endpoint that doesn't have a proper DNS name
   * Google Kubernetes Engine API, Kubernetes nodes/pods, IoT devices on your LAN
@@ -66,21 +68,22 @@ Consider this library if you:
 
 ### Remaining work
 
-* Rewrite with `/std/io/buffer.ts` (added in Deno v1.8.3)
 * Enable/test connection reuse
 * Implement error handling
 * Offer easy API for HTTP/1.1 upgrades, useful for Kubernetes SPDY
-* Support HTTP/2 when available (using `/x/spdy_transport`) for improved efficiency and accuracy
+* Support HTTP/2 when available ~~(using `/x/spdy_transport`)~~ for improved efficiency and accuracy
 
 ## What about `WebSocket`?
 In addition to the `fetch()` limitations listed above,
-Deno's `WebSocket` API is even further behind:
+~~Deno's `WebSocket` API is even further behind:~~
 
-* `WebSocket` doesn't accept `Deno.HttpClient`: https://github.com/denoland/deno/issues/11846
+* ~~`WebSocket` doesn't accept `Deno.HttpClient`: https://github.com/denoland/deno/issues/11846~~
   * Would enable custom Certificate Authorities
   * Would enable TLS client certificate auth
   * Should enable WebSocket over UNIX domain sockets, once `fetch()` has it
+  * Added in Deno v2.5.1 :)
 * ~~`WebSocket` doesn't allow custom HTTP request headers: https://github.com/denoland/deno/issues/11847~~
+  * Added in Deno v2.5.0 :)
 
 A [similar reimplementation effort already exists](https://deno.land/x/custom_socket/)
 for `WebSocket` and so far it addresses custom request headers.

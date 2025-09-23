@@ -17,6 +17,9 @@ import { KubeConfig } from "@cloudydeno/kubernetes-client";
 const kubeConfig = await KubeConfig.getDefaultConfig();
 const kubeContext = kubeConfig.fetchContext();
 
+if (!kubeContext.cluster.server) throw new Error(
+  `No kubeconfig context was found via the environment.`);
+
 // GKE doesn't give client certificates by default, so we can ignore them for this example
 if (false
   || kubeContext.user["client-certificate-data"]
@@ -46,7 +49,6 @@ const dialer = new TlsDialer({
 });
 
 // Issue a readonly request
-console.log(kubeContext)
 const url = new URL("/api", kubeContext.cluster.server);
 const resp = await fetchUsing(dialer, url, { headers });
 console.log(resp.headers);

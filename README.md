@@ -1,4 +1,4 @@
-![Deno CI](https://github.com/cloudydeno/deno-socket_fetch/workflows/CI/badge.svg?branch=main)
+[![CI](https://github.com/cloudydeno/socket-fetch/actions/workflows/deno-ci.yaml/badge.svg)](https://github.com/cloudydeno/socket-fetch/actions/workflows/deno-ci.yaml)
 
 # `/x/socket_fetch`
 

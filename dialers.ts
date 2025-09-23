@@ -2,14 +2,19 @@
  * API to help satisfy HTTP requests by providing network connections.
  */
 export interface Dialer {
-  dial(target: URL): Promise<Deno.Conn>;
+  dial(target: URL): Promise<DialedSocket>;
+}
+
+export type DialedSocket = {
+  readable: ReadableStream<Uint8Array>;
+  writable: WritableStream<Uint8Array>;
 }
 
 /**
  * Satisfies HTTP requests by creating a basic plaintext TCP connection.
  */
 export class TcpDialer implements Dialer {
-  async dial(target: URL): Promise<Deno.Conn> {
+  async dial(target: URL): Promise<DialedSocket> {
     return await Deno.connect({
       ...resolveHostPort(target, "80"),
     });
@@ -27,7 +32,7 @@ export class TlsDialer implements Dialer {
     public readonly opts?: Deno.StartTlsOptions | Deno.ConnectTlsOptions,
   ) {}
 
-  async dial(target: URL): Promise<Deno.Conn> {
+  async dial(target: URL): Promise<DialedSocket> {
     // If the options include a separete SNI host, we need to use startTls.
     if (this.opts?.hostname) {
       const conn = await Deno.connect({
@@ -35,8 +40,10 @@ export class TlsDialer implements Dialer {
       });
       const tlsConn = await Deno.startTls(conn, {
         hostname: target.hostname,
+        alpnProtocols: ['http/1.1'],
         ...this.opts,
       });
+      console.log(await tlsConn.handshake())
       return tlsConn;
 
     // Else, we can use connectTls and get mTLS support.
@@ -63,7 +70,7 @@ export class AutoDialer implements Dialer {
   private readonly tlsDialer = new TlsDialer();
   private readonly tcpDialer = new TcpDialer();
 
-  dial(target: URL): Promise<Deno.Conn> {
+  dial(target: URL): Promise<DialedSocket> {
     switch (target.protocol) {
       case 'http:': return this.tcpDialer.dial(target);
       case 'https:': return this.tlsDialer.dial(target);
@@ -92,7 +99,7 @@ export class UnixDialer implements Dialer {
     if (!socketPath) throw new Error(`No UNIX socket path given to UnixDialer`);
   }
 
-  async dial(): Promise<Deno.Conn> {
+  async dial(): Promise<DialedSocket> {
     return await Deno.connect({
       transport: "unix",
       path: this.socketPath,

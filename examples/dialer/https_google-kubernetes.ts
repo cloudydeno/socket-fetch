@@ -10,10 +10,10 @@
  *   "Fetching https://1.1.1.1 or any other bare IP address fails with 'invalid dnsname'"
  *   @ https://github.com/denoland/deno/issues/7660
  */
-import { fetchUsing, TlsDialer } from "../../mod.ts";
+import { fetchUsing, TlsDialer } from "@cloudydeno/socket-fetch";
 
 // Load the user's KubeConfig file
-import { KubeConfig } from "https://deno.land/x/kubernetes_client@v0.3.0/lib/kubeconfig.ts";
+import { KubeConfig } from "@cloudydeno/kubernetes-client";
 const kubeConfig = await KubeConfig.getDefaultConfig();
 const kubeContext = kubeConfig.fetchContext();
 
@@ -46,6 +46,7 @@ const dialer = new TlsDialer({
 });
 
 // Issue a readonly request
+console.log(kubeContext)
 const url = new URL("/api", kubeContext.cluster.server);
 const resp = await fetchUsing(dialer, url, { headers });
 console.log(resp.headers);

@@ -1,7 +1,6 @@
-import { iterateReader } from "https://deno.land/std@0.175.0/streams/iterate_reader.ts";
-import { writeAll } from "https://deno.land/std@0.175.0/streams/write_all.ts";
+import type { DialedSocket } from "./types.ts";
 
-export async function performRequest(conn: Deno.Conn, url: URL, request: Request) {
+export async function performRequest(conn: DialedSocket, url: URL, request: Request): Promise<Response> {
 
   if (request.body) throw new Error(`TODO: Request#body`);
   if (request.cache) throw new Error(`TODO: Request#cache`);
@@ -32,17 +31,19 @@ export async function performRequest(conn: Deno.Conn, url: URL, request: Request
   }
   reqHeaders.set("connection", "close"); // TODO: connection reuse
 
-  await writeAll(conn, new TextEncoder().encode(`${request.method} ${url.pathname} HTTP/1.1\r\n`));
+  const writer = conn.writable.getWriter();
+  await writer.write(new TextEncoder().encode(`${request.method} ${url.pathname} HTTP/1.1\r\n`));
   for (const header of reqHeaders) {
     // TODO: surely values need to be sanitized
-    await writeAll(conn, new TextEncoder().encode(`${header[0]}: ${header[1]}\r\n`));
+    await writer.write(new TextEncoder().encode(`${header[0]}: ${header[1]}\r\n`));
   }
-  await writeAll(conn, new TextEncoder().encode(`\r\n`));
+  await writer.write(new TextEncoder().encode(`\r\n`));
+  writer.releaseLock();
 
   const headerLines = new Array<string>();
   let leftovers = new Array<Uint8Array>();
   let mode: "headers" | "body" | "chunks" = "headers";
-  for await (const b of iterateReader(conn)) {
+  for await (const b of conn.readable) {
     // console.log('---', b.length);
     let remaining = b.subarray(0);
     while (mode === "headers" && remaining.includes(10)) {

@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --unstable --allow-read=/var/run/docker.sock --allow-write=/var/run/docker.sock
 
-import { fetchUsing, UnixDialer } from "../../mod.ts";
+import { fetchUsing, UnixDialer } from "@cloudydeno/socket-fetch";
 
 // Set up a UNIX domain socket dialer manually
 const dialer = new UnixDialer("/var/run/docker.sock");

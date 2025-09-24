@@ -32,7 +32,7 @@ export async function performRequest(conn: DialedSocket, url: URL, request: Requ
   reqHeaders.set("connection", "close"); // TODO: connection reuse
 
   const writer = conn.writable.getWriter();
-  await writer.write(new TextEncoder().encode(`${request.method} ${url.pathname} HTTP/1.1\r\n`));
+  await writer.write(new TextEncoder().encode(`${request.method} ${url.pathname}${url.search} HTTP/1.1\r\n`));
   for (const header of reqHeaders) {
     // TODO: surely values need to be sanitized
     await writer.write(new TextEncoder().encode(`${header[0]}: ${header[1]}\r\n`));
@@ -114,7 +114,7 @@ function dechunk(raw: Uint8Array) {
     const header = new TextDecoder().decode(headerSlice).trimEnd().split(';')[0];
     const chunkSize = parseInt(header, 16);
     chunks.push(raw.subarray(nextNl, nextNl + chunkSize));
-    inputPos = nextNl + chunkSize;
+    inputPos = nextNl + chunkSize + 2;
   }
 
   const bodySize = chunks.reduce((a, b) => b.byteLength + a, 0);

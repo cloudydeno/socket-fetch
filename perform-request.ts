@@ -6,14 +6,14 @@ export async function performRequest(conn: DialedSocket, url: URL, request: Requ
   if (request.cache) {
     if (request.cache != 'default') throw new Error(`TODO: Request#cache=${JSON.stringify(request.cache)}`);
   }
-  if (request.credentials) console.warn(`TODO: Request#credentials`);
-  if (request.integrity) console.warn(`TODO: Request#integrity`);
-  if (request.mode) console.warn(`TODO: Request#mode`);
-  if (request.destination) console.warn(`TODO: Request#destination`);
+  if (request.credentials) console.warn(`TODO: Request#credentials=${JSON.stringify(request.credentials)}`);
+  if (request.integrity) console.warn(`TODO: Request#integrity=${JSON.stringify(request.integrity)}`);
+  if (request.mode) console.warn(`TODO: Request#mode=${JSON.stringify(request.mode)}`);
+  if (request.destination) console.warn(`TODO: Request#destination=${JSON.stringify(request.destination)}`);
   // TODO: default value is 'follow'
   // if (request.redirect && request.redirect !== 'manual') throw new Error(`TODO: Request#redirect of ${request.redirect}`);
-  if (request.referrer) console.warn(`TODO: Request#referrer`);
-  if (request.referrerPolicy) console.warn(`TODO: Request#referrerPolicy`);
+  if (request.referrer) console.warn(`TODO: Request#referrer=${JSON.stringify(request.referrer)}`);
+  if (request.referrerPolicy) console.warn(`TODO: Request#referrerPolicy=${JSON.stringify(request.referrerPolicy)}`);
   // if (request.signal) throw new Error(`TODO: Request#signal`);
 
   const reqHeaders = new Headers(request.headers);
